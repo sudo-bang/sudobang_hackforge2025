@@ -8,14 +8,44 @@ import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as Location from 'expo-location';
 import axios from 'axios';
+import { useSocket } from '../context/SocketContext';
+import { useAuth } from '@clerk/clerk-expo';
 
-enum AmbSearchStatus {
-    Searching = "searching",
-    Found = "found",
+enum EmergencyStatus {
+    Pending = 'pending',
+    AmbulanceAccepted = 'ambulance_accepted',
+    HospitalAccepted = 'hospital_accepted',
+    Picked = 'picked',
+    Arrived = 'arrived',
+}
+
+function formatSecondsToMinutesSeconds(secondsStr: string): string {
+    const totalSeconds = parseFloat(secondsStr);
+
+    if (isNaN(totalSeconds)) {
+        return "Error: Invalid input string. Not a number.";
+    }
+
+    if (totalSeconds < 0) {
+        return "Error: Duration cannot be negative.";
+    }
+
+    if (totalSeconds < 60) {
+        return "soon";
+    } else {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = Math.floor(totalSeconds % 60);
+
+        const formattedMinutes = minutes.toString();
+        const formattedSeconds = seconds.toString().padStart(2, '0');
+
+        return `${formattedMinutes}:${formattedSeconds}`;
+    }
 }
 
 export default function SOSActiveScreen() {
-    const [status, setStatus] = useState(AmbSearchStatus.Searching);
+    const [emergencyId, setEmergencyId] = useState<string | null>(null);
+    const [status, setStatus] = useState<EmergencyStatus>(EmergencyStatus.Pending);
     const [ambulanceInfo, setAmbulanceInfo] = useState<{ id: string, driver: string } | null>(null);
 
     const [userLocation, setUserLocation] = useState<null | { latitude: number; longitude: number }>(null);
@@ -26,7 +56,8 @@ export default function SOSActiveScreen() {
     const [eta, setEta] = useState('');
     const [paramedic, setParamedic] = useState<null | { name: string; id: string; phone: string }>(null);
     const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([]);
-    
+    const [loadingUserLocation, setLoadingUserLocation] = useState(true);
+
     const region = useMemo(() => {
         return {
             latitudeDelta: 0.0922,
@@ -36,57 +67,140 @@ export default function SOSActiveScreen() {
         };
     }, [userLocation]);
 
+
+    const { getToken } = useAuth();
+
+    const createEmergencyRequest = async (coordinates: [number, number]) => {
+        try {
+            const token = await getToken();
+            console.log('token', token);
+            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/emergency/request`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ coordinates }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to create emergency request');
+            }
+
+            const data = await response.json();
+            console.log('Emergency request created:', data);
+
+            setEmergencyId(data._id);
+            setStatus(data.status);
+        } catch (err) {
+            console.error('Error creating emergency request:', err);
+            throw err;
+        }
+    };
+    const loadUserLocation = async () => {
+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/emergency/x-accident`, {method: 'POST'});
+
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+            console.error('Permission to access location was denied');
+            return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        setUserLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+        });
+
+        setLoadingUserLocation(false);
+    }
+
     useEffect(() => {
-        // Simulate the process of finding and dispatching an ambulance
+        loadUserLocation();
+    }, []);
+
+    // Create an emergency request
+    useEffect(() => {
+        if (emergencyId) return; // already created emergency request
+        if (loadingUserLocation) return;
+        if (!userLocation) {
+            console.error('user location loaded but still null');
+            return;
+        }
+        createEmergencyRequest([userLocation.longitude, userLocation.latitude]);
+    }, [userLocation]);
+
+    // Simulate the process of finding and dispatching an ambulance
+    useEffect(() => {
         const searchTimer = setTimeout(() => {
-            setStatus(AmbSearchStatus.Found);
+            setStatus(EmergencyStatus.AmbulanceAccepted);
             setAmbulanceInfo({
                 id: 'AMB-2023-42',
-                driver: 'David Wilson'
+                driver: 'Suparno Saha'
             });
             setParamedic({
-                name: 'Susie Rodriguez',
+                name: 'Soham Nandi',
                 id: 'AMB-2023-42',
-                phone: '+14155552671',
+                phone: '+918878906121',
             });
-            setEta('8 minutes');
         }, 3000);
 
         return () => clearTimeout(searchTimer);
     }, []);
 
+
+    // useEffect to recalculate route on location update
     useEffect(() => {
         (async () => {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                console.error('Permission to access location was denied');
+            if (loadingUserLocation) return;
+            if (!userLocation) {
+                console.error('user location loaded but still null');
                 return;
             }
 
-            let location = await Location.getCurrentPositionAsync({});
-            setUserLocation({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            });
-
-            console.log("fetching route:");
             try {
-                const url = `https://router.project-osrm.org/route/v1/driving/${ambulanceLocation.longitude},${ambulanceLocation.latitude};${location.coords.longitude},${location.coords.latitude}?geometries=geojson`;
+                const url = `https://router.project-osrm.org/route/v1/driving/${ambulanceLocation.longitude},${ambulanceLocation.latitude};${userLocation.longitude},${userLocation.latitude}?geometries=geojson`;
                 const response = await axios.get(url);
-                
+
                 if (response.data && response.data.routes.length > 0) {
                     const coordinates = response.data.routes[0].geometry.coordinates.map((coord: [number, number]) => ({
                         latitude: coord[1],
                         longitude: coord[0],
                     }));
-                    // console.log(response.data);
+
+                    const estimatedTime = response.data.routes[0].duration;
+                    setEta(formatSecondsToMinutesSeconds(estimatedTime));
                     setRouteCoordinates(coordinates);
+
+                    // console.log(response.data);
                 }
             } catch (error) {
                 console.error("Error fetching route:", error);
             }
         })();
-    }, [userLocation?.latitude, userLocation?.longitude]);
+    }, [ambulanceLocation.latitude, ambulanceLocation.longitude, userLocation?.latitude, userLocation?.longitude]);
+
+    const { socket, isConnected } = useSocket();
+
+    // useEffect for SOCKET LISTEN location updates of ambulance
+    useEffect(() => {
+        if (!ambulanceInfo?.id || !isConnected) return;
+
+        const requestId = ambulanceInfo.id;
+        const channel = `ambulance-location-${requestId}`;
+
+        const handleLocationUpdate = (coordinates: { latitude: number; longitude: number }) => {
+            console.log("🚑 Live update received:", coordinates);
+            setAmbulanceLocation(coordinates);
+        };
+
+        socket.on(channel, handleLocationUpdate);
+
+        return () => {
+            socket.off(channel, handleLocationUpdate);
+        };
+    }, [ambulanceInfo?.id, isConnected]);
 
     return (
         <View style={styles.container}>
@@ -98,7 +212,7 @@ export default function SOSActiveScreen() {
                     </Text>
                 </View>
 
-                {status === AmbSearchStatus.Searching ? (
+                {loadingUserLocation ? (
                     <View style={styles.searchingContainer}>
                         <ActivityIndicator size="large" color="#e74c3c" />
                         <Text style={styles.searchingText}>
@@ -172,7 +286,7 @@ export default function SOSActiveScreen() {
                     >
                         <FontAwesome name="ambulance" size={30} color="#E53935" />
                     </Marker>
-                    
+
                     {routeCoordinates.length > 0 && (
                         <Polyline coordinates={routeCoordinates} strokeWidth={4} strokeColor="red" />
                     )}

@@ -12,21 +12,20 @@ type EmergencyContact = {
 };
 
 const initialUserData = {
-    name: 'John Doe',
-    age: '35',
+    name: 'Pritam Das',
+    age: '19',
     gender: 'Male',
-    bloodType: 'O+',
+    bloodType: 'B+',
     allergies: 'Penicillin, Peanuts',
     medications: 'Aspirin (daily), Lisinopril',
     medicalConditions: 'Hypertension, Asthma',
-    address: '123 Main St, San Francisco, CA 94103',
-    phoneNumber: '+14155552671',
-    email: 'johndoe@example.com',
+    address: 'Birati, Kolkata - 700051',
+    phoneNumber: '+917044849316',
+    email: 'das06.pritam@gmail.com',
 };
 
 const initialContacts: EmergencyContact[] = [
-    { id: '1', name: 'Jane Doe', relationship: 'Spouse', phone: '+14155553872' },
-    { id: '2', name: 'Michael Doe', relationship: 'Son', phone: '+14155557921' },
+    { id: '1', name: 'Sagnik Goswami', relationship: 'Friend', phone: '+918436287919' },
 ];
 
 export default function ProfileScreen() {

@@ -3,6 +3,7 @@ import { tokenCache } from '@clerk/clerk-expo/token-cache'
 import { Slot } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Provider } from 'react-native-paper'
+import { SocketProvider } from './context/SocketContext'
 
 export default function RootLayout() {
     const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!
@@ -13,10 +14,12 @@ export default function RootLayout() {
 
     return (
         <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-            <Provider>
-                <Slot />
-                <StatusBar style="auto"/>
-            </Provider>
+            <SocketProvider>
+                <Provider>
+                    <Slot />
+                    <StatusBar style="auto"/>
+                </Provider>
+            </SocketProvider>
         </ClerkProvider>
     )
 }

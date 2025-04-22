@@ -3,7 +3,7 @@ const emergencyRequestSchema = new mongoose.Schema({
   userId: { type: String }, // Clerk user ID
   location: {
     type: { type: String, enum: ['Point'], default: 'Point' },
-    coordinates: [Number],
+    coordinates: [Number], // longitude, latitude
   },
   status: {
     type: String,
