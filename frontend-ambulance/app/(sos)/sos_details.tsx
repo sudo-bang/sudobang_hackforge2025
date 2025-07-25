@@ -66,31 +66,26 @@ const SOSDetailsScreen: React.FC = () => {
       const mockSOSDetails: SOSDetails = {
         id: '123456',
         patient: {
-          name: 'Robert Chen',
-          age: 42,
+          name: 'Pritam Das',
+          age: 19,
           gender: 'Male',
           bloodType: 'O+',
           medicalInfo: ['Diabetes Type 2', 'Hypertension'],
           allergies: ['Penicillin', 'Shellfish'],
           emergencyContacts: [
             {
-              name: 'Sarah Chen',
-              relation: 'Spouse',
-              phone: '(555) 123-4567',
-            },
-            {
-              name: 'Dr. James Wilson',
-              relation: 'Primary Care Physician',
-              phone: '(555) 987-6543',
+              name: 'Sagnik Goswami',
+              relation: 'Friend',
+              phone: '+91 84362 87919',
             },
           ],
         },
         accident: {
           time: Date.now() - 1000 * 60 * 10, // 10 minutes ago
           location: {
-            latitude: 37.7858,
-            longitude: -122.4064,
-            address: '825 Battery St, San Francisco, CA 94111',
+            latitude: 22.560706299670564,
+            longitude: 88.41350824577506,
+            address: 'Bidhannagar, Kolkata, West Bengal',
           },
         },
       };
@@ -283,10 +278,10 @@ const SOSDetailsScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Accident Details</Text>
           <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
+            {/* <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Time:</Text>
               <Text style={styles.infoValue}>{formattedAccidentTime}</Text>
-            </View>
+            </View> */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Location:</Text>
               <Text style={styles.infoValue}>{sosDetails.accident.location.address}</Text>

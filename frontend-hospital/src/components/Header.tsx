@@ -62,7 +62,7 @@ const Header = () => {
             <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full flex items-center justify-center">
               <User size={16} className="text-white" />
             </div>
-            <span className="ml-2 text-sm text-gray-300 group-hover:text-cyan-400 transition-colors">General Hospital</span>
+            <span className="ml-2 text-sm text-gray-300 group-hover:text-cyan-400 transition-colors">ResClinic</span>
           </Link>
         </div>
       </div>

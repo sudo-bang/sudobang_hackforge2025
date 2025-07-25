@@ -69,32 +69,80 @@ const SOSDashboard: React.FC = () => {
                 longitude: -122.4862,
                 address: '789 Ocean Ave, San Francisco, CA'
             },
-            timestamp: Date.now() - 1000 * 60 * 30, // 30 minutes ago
+            timestamp: Date.now() - 1000 * 60 * 30, // 30 minutes ago,
+            patient: {
+                name: 'Halu Smith',
+                age: 32,
+                condition: 'Breathing difficulty',
+                vitals: 'SpO2: 92%, RR: 24'
+            }
+        },
+        {
+            id: '4',
+            location: {
+                latitude: 22.560706299670564,
+                longitude: 88.41350824577506,
+                address: 'Bidhannagar, Kolkata, West Bengal'
+            },
+            timestamp: Date.now() - 1000 * 60 * 5, // 5 minutes ago
+            patient: {
+                name: 'Pritam Das',
+                age: 19,
+                condition: 'Bike Accident',
+                vitals: 'BP: 140/90, HR: 95'
+            }
         }
     ]);
     const [isAvailable, setIsAvailable] = useState<boolean>(true);
     const router = useRouter();
 
-    const {socket, isConnected} = useSocket();
+    const { socket, isConnected } = useSocket();
 
     useEffect(() => {
         if (!socket) return;
-    
+
         const handleNewEmergency = (data: any) => {
-          console.log('Received new emergency:', data);
+            console.log('Received new emergency:', data);
         };
-    
+
         socket.on('new-emergency', handleNewEmergency);
-    
+
         return () => {
-          socket.off('new-emergency', handleNewEmergency); // cleanup
+            socket.off('new-emergency', handleNewEmergency); // cleanup
         };
-      }, [socket]);
-    
+    }, [socket]);
+
 
     const toggleAvailability = () => {
         setIsAvailable(!isAvailable);
     };
+    const renderSOSItem = ({ item }: { item: SOSRequest }) => (
+        <TouchableOpacity
+            style={styles.sosItem}
+            onPress={() => navigateToSOSDashboard()} // Simply route to SOSDashboard page
+        >
+            <View style={styles.sosContent}>
+                <View style={styles.sosDetails}>
+                    <Text style={styles.sosAddress} numberOfLines={1}>
+                        {item.location.address}
+                    </Text>
+                    {/* <Text style={styles.sosTime}>{timeSince(item.timestamp)}</Text> */}
+                    {item.patient && (
+                        <Text style={styles.patientInfo} numberOfLines={2}>
+                            {item.patient.name && `${item.patient.name}, `}
+                            {item.patient.age && `${item.patient.age} y/o, `}
+                            {item.patient.condition}
+                        </Text>
+                    )}
+                    {item.patient?.vitals && (
+                        <Text style={styles.vitals} numberOfLines={1}>
+                            {item.patient.vitals}
+                        </Text>
+                    )}
+                </View>
+            </View>
+        </TouchableOpacity>
+    );
 
     const navigateToSettings = () => {
         // Simply navigate to the settings page

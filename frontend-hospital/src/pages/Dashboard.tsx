@@ -24,8 +24,8 @@ const Dashboard = () => {
   const [hospitalData, setHospitalData] = useState({
     totalBeds: 120,
     availableBeds: 42,
-    activeCases: 6,
-    incomingAmbulances: 2,
+    activeCases: 1,
+    incomingAmbulances: 1,
     lastUpdated: new Date().toLocaleTimeString()
   });
 
@@ -166,7 +166,7 @@ const Dashboard = () => {
                 <div className="flex items-center mt-2">
                   <span className="text-cyan-500 flex items-center">
                     <Clock size={14} className="mr-1" />
-                    Nearest arrival: 4 min
+                    Nearest arrival: 8 min
                   </span>
                 </div>
               </div>

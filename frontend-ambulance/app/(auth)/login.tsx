@@ -90,7 +90,7 @@ export default function LoginScreen() {
         //     // You might want to set a general error message here
         // }
 
-        router.replace('/dashboard');
+        router.push('/dashboard');
     };
 
     const handleOAuth = useCallback(async () => {

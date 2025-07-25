@@ -49,14 +49,17 @@ export default function SOSActiveScreen() {
     const [ambulanceInfo, setAmbulanceInfo] = useState<{ id: string, driver: string } | null>(null);
 
     const [userLocation, setUserLocation] = useState<null | { latitude: number; longitude: number }>(null);
-    const [ambulanceLocation, setAmbulanceLocation] = useState<null | { latitude: number; longitude: number }>(null);
+    const [ambulanceLocation, setAmbulanceLocation] = useState({
+        latitude: 22.578138277208723,
+        longitude: 88.40194515272319,
+    });
     const [eta, setEta] = useState('');
     const [paramedic, setParamedic] = useState<null | { name: string; id: string; phone: string }>(null);
     const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([]);
     const [loadingUserLocation, setLoadingUserLocation] = useState(true);
-    
+
     const [ambulanceSocketId, setAmbulanceSocketId] = useState<string | null>(null);
-    const {socket, isConnected} = useSocket();
+    const { socket, isConnected } = useSocket();
 
 
     const region = useMemo(() => {
@@ -100,6 +103,8 @@ export default function SOSActiveScreen() {
         }
     };
     const loadUserLocation = async () => {
+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/emergency/x-accident`, { method: 'POST' });
+
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
             console.error('Permission to access location was denied');
@@ -151,6 +156,20 @@ export default function SOSActiveScreen() {
     // Polling every 5secs to see if ambulance assigned yet
     useEffect(() => {
         let interval: NodeJS.Timeout;
+
+        // Simulate the process of finding and dispatching an ambulance
+        // const searchTimer = setTimeout(() => {
+        //     setStatus(EmergencyStatus.AmbulanceAccepted);
+        //     setAmbulanceInfo({
+        //         id: 'AMB-2023-42',
+        //         driver: 'Suparno Saha'
+        //     });
+        //     setParamedic({
+        //         name: 'Soham Nandi',
+        //         id: 'AMB-2023-42',
+        //         phone: '+918878906121',
+        //     });
+        // }, 3000);
 
         // Only start polling if we have an emergencyRequestId and the socket is connected
         if (emergencyId && isConnected && !ambulanceSocketId) {
@@ -260,7 +279,7 @@ export default function SOSActiveScreen() {
                     </Text>
                 </View>
 
-                {status === EmergencyStatus.Pending ? (
+                {loadingUserLocation ? (
                     <View style={styles.searchingContainer}>
                         <ActivityIndicator size="large" color="#e74c3c" />
                         <Text style={styles.searchingText}>

@@ -70,7 +70,7 @@ export default function DashboardScreen() {
         <View style={styles.container}>
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.greeting}>Hello, John</Text>
+                    <Text style={styles.greeting}>Hello, Pritam</Text>
                     <Text style={styles.subGreeting}>How are you feeling today?</Text>
                 </View>
                 <TouchableOpacity onPress={() => router.push('/profile')}>
