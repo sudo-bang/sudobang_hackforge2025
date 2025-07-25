@@ -75,7 +75,7 @@ const SOSDetailsScreen: React.FC = () => {
           emergencyContacts: [
             {
               name: 'Sagnik Goswami',
-              relation: 'Husband',
+              relation: 'Friend',
               phone: '+91 84362 87919',
             },
           ],
