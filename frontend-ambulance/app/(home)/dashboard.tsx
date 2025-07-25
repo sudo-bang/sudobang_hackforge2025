@@ -10,6 +10,7 @@ import {
     StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSocket } from '../context/SocketContext';
 
 // Define TypeScript interfaces
 interface SOSRequest {
@@ -29,65 +30,67 @@ interface SOSRequest {
 }
 
 const SOSDashboard: React.FC = () => {
-    const [sosRequests, setSOSRequests] = useState<SOSRequest[]>([]);
+    // precoded mock data
+    const [sosRequests, setSOSRequests] = useState<SOSRequest[]>([
+        {
+            id: '1',
+            location: {
+                latitude: 37.7749,
+                longitude: -122.4194,
+                address: '123 Main St, San Francisco, CA'
+            },
+            timestamp: Date.now() - 1000 * 60 * 5, // 5 minutes ago
+            patient: {
+                name: 'John Doe',
+                age: 45,
+                condition: 'Chest pain',
+                vitals: 'BP: 140/90, HR: 95'
+            }
+        },
+        {
+            id: '2',
+            location: {
+                latitude: 37.7833,
+                longitude: -122.4167,
+                address: '456 Market St, San Francisco, CA'
+            },
+            timestamp: Date.now() - 1000 * 60 * 15, // 15 minutes ago
+            patient: {
+                name: 'Jane Smith',
+                age: 32,
+                condition: 'Breathing difficulty',
+                vitals: 'SpO2: 92%, RR: 24'
+            }
+        },
+        {
+            id: '3',
+            location: {
+                latitude: 37.7694,
+                longitude: -122.4862,
+                address: '789 Ocean Ave, San Francisco, CA'
+            },
+            timestamp: Date.now() - 1000 * 60 * 30, // 30 minutes ago
+        }
+    ]);
     const [isAvailable, setIsAvailable] = useState<boolean>(true);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const router = useRouter();
 
-    // Mock function to fetch SOS requests
-    const fetchSOSRequests = () => {
-        setIsLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            const mockData: SOSRequest[] = [
-                {
-                    id: '1',
-                    location: {
-                        latitude: 37.7749,
-                        longitude: -122.4194,
-                        address: '123 Main St, San Francisco, CA'
-                    },
-                    timestamp: Date.now() - 1000 * 60 * 5, // 5 minutes ago
-                    patient: {
-                        name: 'John Doe',
-                        age: 45,
-                        condition: 'Chest pain',
-                        vitals: 'BP: 140/90, HR: 95'
-                    }
-                },
-                {
-                    id: '2',
-                    location: {
-                        latitude: 37.7833,
-                        longitude: -122.4167,
-                        address: '456 Market St, San Francisco, CA'
-                    },
-                    timestamp: Date.now() - 1000 * 60 * 15, // 15 minutes ago
-                    patient: {
-                        name: 'Jane Smith',
-                        age: 32,
-                        condition: 'Breathing difficulty',
-                        vitals: 'SpO2: 92%, RR: 24'
-                    }
-                },
-                {
-                    id: '3',
-                    location: {
-                        latitude: 37.7694,
-                        longitude: -122.4862,
-                        address: '789 Ocean Ave, San Francisco, CA'
-                    },
-                    timestamp: Date.now() - 1000 * 60 * 30, // 30 minutes ago
-                }
-            ];
-            setSOSRequests(mockData);
-            setIsLoading(false);
-        }, 1000);
-    };
+    const {socket, isConnected} = useSocket();
 
     useEffect(() => {
-        fetchSOSRequests();
-    }, []);
+        if (!socket) return;
+    
+        const handleNewEmergency = (data: any) => {
+          console.log('Received new emergency:', data);
+        };
+    
+        socket.on('new-emergency', handleNewEmergency);
+    
+        return () => {
+          socket.off('new-emergency', handleNewEmergency); // cleanup
+        };
+      }, [socket]);
+    
 
     const toggleAvailability = () => {
         setIsAvailable(!isAvailable);
@@ -198,11 +201,9 @@ const SOSDashboard: React.FC = () => {
                 renderItem={renderSOSItem}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContainer}
-                refreshing={isLoading}
-                onRefresh={fetchSOSRequests}
             />
 
-            {sosRequests.length === 0 && !isLoading && (
+            {sosRequests.length === 0 && (
                 <View style={styles.emptyState}>
                     <Text style={styles.emptyStateText}>No active incidents</Text>
                 </View>
